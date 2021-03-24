@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+#  web:
+#    volumes:
+#    - ./nginx_templates:/etc/nginx/templates
+#    - ./site:/etc/nginx/html
+  quarcus_dev_init:
+    image: maven:3.6.3-openjdk-11
+    volumes:
+      - ./quarkus/m2:/root/.m2
+      - quarkus_src_vol:/usr/src/mymaven
+    working_dir: /usr/src/mymaven
+    command: mvn io.quarkus:quarkus-maven-plugin:1.9.2.Final:create -DprojectGroupId=org.acme -DprojectArtifactId=${QUARKUS_PROJECT} -DclassName="org.acme.getting.started.GreetingResource" -Dpath="/hello"
+
+  quarcus_dev:
+    image: maven:3.6.3-openjdk-11
+    volumes:
+      - ./quarkus/m2:/root/.m2
+      - quarkus_src_vol:/usr/src/mymaven
+    working_dir: /usr/src/mymaven/${QUARKUS_PROJECT}
+    command: mvn quarkus:dev
+    ports:
+      - 8080:8080
+      
+  quasar_dev_init:
+    image: micadoproject/quasar:1.1.2
+    volumes:
+      - quasar_vol:/code
+    working_dir: /
+    command: /bin/sh -c "quasar create code"
+
+  quasar_dev:
+    image: micadoproject/quasar:1.1.2
+    volumes:
+      - quasar_vol:/code
+    working_dir: /code
+#    command: /bin/sh -c "yes Y | quasar create code"
+#    command: /bin/sh -c "printf 'y\ncode\ny\n' | quasar create code"
+    command: /bin/sh -c "npm install && quasar dev"
+    ports:
+      - 8080:8080
+volumes:
+  quarkus_src_vol:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./quarkus/src
+      o: bind
+  quasar_vol:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./quasar
+      o: bind
+#  data2:
+#    driver: local
+    
+#networks:
+#  dev_net:
